@@ -22,7 +22,6 @@ export default function Home() {
   const fetchData = async () => {
     try {
       const response = await http.get('/todos');
-      console.log(response.data)
       setData(response.data.todos);
       setLoading(false);
     } catch (err) {
