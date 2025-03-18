@@ -1,103 +1,229 @@
+"use client";
+import React, { useState,useEffect } from 'react';
+import http from './services/httpService';
+import Navbar from "./navbar";
 import Image from "next/image";
+import './globals.css';
+import Container from './container';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [data, setData] = useState(null);
+  const [edit, setEdit] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [title, settitle] = useState('');
+  const [desc, setdesc] = useState('');
+  const [id, setId] = useState('');
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+   fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const response = await http.get('/todos');
+      console.log(response.data)
+      setData(response.data.todos);
+      setLoading(false);
+    } catch (err) {
+      setError(err);
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const {currentTarget:input}=e;
+    input.name==='title'?settitle(input.value):setdesc(input.value);
+
+  };
+
+    const postData=async (url,obj)=>{
+        let response=await http.post(url,obj);
+        settitle('');
+        setdesc('');
+        setId('');
+        fetchData();
+    }
+    const putData=async (url,obj)=>{
+        let response=await http.put(url,obj);
+        setEdit(false);
+        settitle('');
+        setdesc('');
+        setId('');
+        fetchData();
+
+    }
+    const handleSubmit=(e)=>
+    {   e.preventDefault();
+        edit?putData(`/todos/${id}`,{title,desc})
+        :postData("/todos",{title,desc});
+    }
+
+    const handleContainer=(data)=>{
+      setEdit(true);
+      settitle(data.title);
+      setdesc(data.desc);
+      setId(data._id);
+    }
+    const handleDelete=async (id)=>{
+      let response=await http.deleteApi(`/todos/${id}`);
+      settitle('');
+      setdesc('');
+      setId('');
+      fetchData();
+    }
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error.message}</p>;
+  
+  return (
+    <div>
+      <Navbar/>
+      <div className="w-[1125px] h-[1823px] mt-[59px] ml-[114px] gap-[72px] flex">
+        <div className="w-[401px] h-[1823px] gap-[16px]">
+          <div className="row ">
+            <div className="col-6">
+              <button className="w-[100px] h-[48px] gap-[8px] rounded-[8px] pt-[12px] pr-[16px] pb-[12px] pl-[16px] btn btn-dark" onClick={handleSubmit} disabled={title===''||desc===''} > 
+                <div className="row">
+                  <div className="col-6">
+                    <Image 
+                      src="/Addotes.png" 
+                      alt="Addotes" 
+                      width={20} 
+                      height={20} 
+                    />
+                  </div>
+                  <div className="col-4 p-0">
+                    <span className="w-[40px] h-[21px] font-poppins font-medium text-sm leading-none tracking-normal align-middle" >
+                      TODO
+                    </span>
+                  </div>
+                </div>
+              </button>
+            </div>
+            <div className="col-6"> 
+              <button className="btn btn-light w-[56px] h-[48px] gap-[8px] rounded-[8px] pt-[12px] pr-[16px] pb-[12px] pl-[16px] float-right">
+                <Image
+                  src="/Vector.png"
+                  alt="Vector"
+                  width={24}
+                  height={24}
+                />
+              </button>
+            </div>
+          </div>
+          <div className="container w-[401px] h-[1759px] gap-[15px] mt-2">
+            {data.map(st=>{
+              return <Container data={st} handleContainer={handleContainer}/>})}
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+        <div className="w-[652px] h-[736px] gap-4 pt-[35px] pr-[42px] pb-[35px] pl-[42px] border bg-white">
+          <div className="w-[545px] h-[54px] flex items-center justify-between ">
+            <div className="w-[521px] h-[54px] float-left font-poppins font-semibold text-[36px] leading-none tracking-[0.02em]">
+            <input
+              type="text"
+              name="title"
+              value={title}
+              onChange={handleInputChange}
+              className="ml-0 mt-1 block w-full  py-2 outline-none border border-white rounded-md"
+              placeholder="Add Title"
+            />
+            </div>
+            <div className="w-[20px] h-[20px] float-right" onClick={()=>handleDelete(id)}>
+              <Image
+                  src="/Glyph_undefined.png" 
+                  alt="Glyph_undefined" 
+                  width={20} 
+                  height={20} 
+                />
+            </div>
+          </div>
+          <div className="w-[561px] h-[49px] top-[105px] left-[42px] rounded-tl-[20px] rounded-tr-[20px] border-b-2 flex items-center">
+            <Image
+                className="w-[10px] h-[14px] mr-5"
+                src="/B.png" 
+                alt="B" 
+                width={10} 
+                height={14} 
+            />
+            <Image
+                className="w-[10px] h-[14px] mr-5"
+                src="/vector_1.png" 
+                alt="vector_1" 
+                width={10} 
+                height={14} 
+            />
+            <Image
+                className="w-[10px] h-[14px] mr-5"
+                src="/vector_2.png" 
+                alt="vector_2" 
+                width={10} 
+                height={14} 
+            />
+            <Image
+                className="w-[10px] h-[14px] mr-5"
+                src="/vector_3.png" 
+                alt="vector_3" 
+                width={10} 
+                height={14} 
+            />
+            <Image
+                className="w-[10px] h-[14px] mr-5"
+                src="/vector_4.png" 
+                alt="vector_4" 
+                width={10} 
+                height={14} 
+            />
+            <Image
+                className="w-[10px] h-[14px] mr-5"
+                src="/vector_5.png" 
+                alt="vector_5" 
+                width={10} 
+                height={14} 
+            />
+            <Image
+                className="w-[10px] h-[14px] mr-5"
+                src="/vector_6.png" 
+                alt="vector_6" 
+                width={10} 
+                height={14} 
+            />
+            <Image
+                className="w-[10px] h-[14px] mr-5"
+                src="/vector_7.png" 
+                alt="vector_7" 
+                width={10} 
+                height={14} 
+            />
+            <Image
+                className="w-[10px] h-[14px] mr-5"
+                src="/vector_8.png" 
+                alt="vector_8" 
+                width={10} 
+                height={14} 
+            />
+            <Image
+                className="w-[10px] h-[14px] mr-5"
+                src="/vector_9.png" 
+                alt="vector_9" 
+                width={10} 
+                height={14} 
+            />
+          </div>
+          <div className="w-[561px] h-[49px] top-[105px] left-[42px] rounded-tl-[20px] rounded-tr-[20px] static">
+          <textarea
+            name="desc"
+            value={desc}
+            onChange={handleInputChange}
+            className="mt-1 block w-full py-2 outline-none resize-y border border-white rounded-md  focus:border-blue-500"
+            placeholder="Type something..."
+            rows={3}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
+
+
